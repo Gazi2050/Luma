@@ -29,10 +29,26 @@ const (
 	LET    = "LET"
 	CONST  = "CONST"
 	LOG    = "LOG"
+	FN     = "FN"
+	LOOP   = "LOOP"
+	RETURN = "RETURN"
+
+	LT  = "<"
+	GT  = ">"
+	LTE = "<="
+	GTE = ">="
+	EQ  = "=="
+	NEQ = "!="
 
 	SEMICOLON = ";"
+	COMMA     = ","
 	LPAREN    = "("
 	RPAREN    = ")"
+	LBRACE    = "{"
+	RBRACE    = "}"
+	COLON     = ":"
+	LBRACKET  = "["
+	RBRACKET  = "]"
 )
 
 // ===== Token =====
@@ -85,13 +101,51 @@ func (l *Lexer) NextToken() Token {
 	case '/':
 		tok = Token{Type: SLASH, Literal: string(l.ch)}
 	case '=':
-		tok = Token{Type: ASSIGN, Literal: string(l.ch)}
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = Token{Type: EQ, Literal: "=="}
+		} else {
+			tok = Token{Type: ASSIGN, Literal: string(l.ch)}
+		}
+	case '!':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = Token{Type: NEQ, Literal: "!="}
+		} else {
+			tok = Token{Type: ILLEGAL, Literal: string(l.ch)}
+		}
+	case '<':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = Token{Type: LTE, Literal: "<="}
+		} else {
+			tok = Token{Type: LT, Literal: "<"}
+		}
+	case '>':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok = Token{Type: GTE, Literal: ">="}
+		} else {
+			tok = Token{Type: GT, Literal: ">"}
+		}
 	case '(':
 		tok = Token{Type: LPAREN, Literal: string(l.ch)}
 	case ')':
 		tok = Token{Type: RPAREN, Literal: string(l.ch)}
+	case '{':
+		tok = Token{Type: LBRACE, Literal: string(l.ch)}
+	case '}':
+		tok = Token{Type: RBRACE, Literal: string(l.ch)}
+	case '[':
+		tok = Token{Type: LBRACKET, Literal: string(l.ch)}
+	case ']':
+		tok = Token{Type: RBRACKET, Literal: string(l.ch)}
+	case ',':
+		tok = Token{Type: COMMA, Literal: string(l.ch)}
 	case ';':
 		tok = Token{Type: SEMICOLON, Literal: string(l.ch)}
+	case ':':
+		tok = Token{Type: COLON, Literal: string(l.ch)}
 	case '"':
 		tok.Type = STRING
 		tok.Literal = l.readString()
@@ -165,6 +219,8 @@ func LookupIdent(ident string) TokenType {
 		return CONST
 	case "log":
 		return LOG
+	case "true", "false":
+		return BOOL
 	default:
 		return IDENT
 	}
@@ -197,6 +253,14 @@ type BooleanLiteral struct {
 
 type Identifier struct {
 	Value string
+}
+
+type ArrayLiteral struct {
+	Elements []Expression
+}
+
+type ObjectLiteral struct {
+	Pairs map[string]Expression
 }
 
 // ===== Environment =====
@@ -234,6 +298,18 @@ func evalExpr(expr Expression, env *Env) interface{} {
 		return e.Value
 	case *Identifier:
 		return env.store[e.Value]
+	case *ArrayLiteral:
+		arr := []interface{}{}
+		for _, el := range e.Elements {
+			arr = append(arr, evalExpr(el, env))
+		}
+		return arr
+	case *ObjectLiteral:
+		obj := map[string]interface{}{}
+		for k, v := range e.Pairs {
+			obj[k] = evalExpr(v, env)
+		}
+		return obj
 	}
 	return nil
 }
@@ -264,12 +340,12 @@ func parse(tokens []Token) []Statement {
 			}
 			stmts = append(stmts, &LetStatement{Name: name, Value: value})
 		} else if tok.Type == LOG {
-			i++ // skip 'log'
+			i++
 			if i >= len(tokens) || tokens[i].Type != LPAREN {
 				fmt.Println("Syntax error: expected '(' after log")
 				break
 			}
-			i++ // skip '('
+			i++
 			exprTok := tokens[i]
 			var expr Expression
 			switch exprTok.Type {
@@ -286,7 +362,7 @@ func parse(tokens []Token) []Statement {
 				i++
 				continue
 			}
-			i++ // skip expression
+			i++
 			if i < len(tokens) && tokens[i].Type == RPAREN {
 				i++
 			}
@@ -306,7 +382,7 @@ func atoi(s string) int {
 	return val
 }
 
-// ===== Main =====
+// ===== Run Script =====
 func runLumaScript(filePath string) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -331,6 +407,7 @@ func runLumaScript(filePath string) {
 	}
 }
 
+// ===== Main =====
 func main() {
 	if len(os.Args) > 2 && os.Args[1] == "run" {
 		file := os.Args[2]
@@ -338,7 +415,6 @@ func main() {
 		return
 	}
 
-	// REPL
 	env := NewEnv()
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Luma REPL v1 - Type your code")
