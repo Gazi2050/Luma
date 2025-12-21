@@ -1,57 +1,30 @@
-// Variables
+// 1. Variables & Types
 let name = "Luma";
-let age = 10;
-const isReady = true;
+const version = 1;
+let isReady = true;
 
-log(name);
-log(age);
-log(isReady);
+// 2. Objects & Arrays
+let user = { name: name, age: version };
+let nums = [10, 20, 30];
 
-// Arithmetic
-let x = 5;
-let y = 10;
-let sum = x + y;
-let product = x * y;
-log(sum)
-log(product)
+log("Hello " + user.name);
+log(nums[0]);
+log(len(nums));
 
-// Boolean and condition
-if (x > y) {
-    log("x is bigger")
-} else {
-    log("x is smaller or equal")
-}
+// 3. Math & Comparisons
+let result = (10 + 2) * 3;
+log(result > 30); // true
 
-// Function
-fn add(a, b) {
-    return a + b
-}
-let result = add(7, 3)
-log(result)
-
-// Loop
-loop (let i = 0; i < 5; i = i + 1) {
-    log(i)
-}
-
-// Array
-let nums = [1, 2, 3, 4, 5]
-log(nums[0])
-log(nums[2])
-
-// Object
-let user = {name: "Luma", age: 1}
-log(user.name)
-log(user.age)
-
-// Conditional inside function
-fn checkNumber(n) {
-    if (n > 10) {
-        return "Big"
-    } else {
-        return "Small"
+// 4. Functions
+fn greet(n) {
+    if (len(n) > 0) {
+        return "Hi, " + n;
     }
+    return "Hi, guest";
 }
+log(greet(user.name));
 
-log(checkNumber(5))
-log(checkNumber(15))
+// 5. Loops
+loop (let i = 0; i < 3; i = i + 1) {
+    log(i);
+}

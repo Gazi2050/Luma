@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -250,14 +251,13 @@ func (l *Lexer) NextToken() Token {
 			lit := l.readIdentifier()
 			tok.Type = LookupIdent(lit)
 			tok.Literal = lit
-			return tok
 		} else if isDigit(l.ch) {
 			tok.Type = NUMBER
 			tok.Literal = l.readNumber()
-			return tok
 		} else {
 			tok = Token{Type: ILLEGAL, Literal: string(l.ch)}
 		}
+		return tok
 	}
 	l.readChar()
 	return tok
@@ -600,7 +600,7 @@ func (p *Parser) parseLetStatement() Statement {
 	stmt.IsConst = p.curToken.Type == CONST
 
 	if p.peekToken.Type != IDENT {
-		fmt.Printf("PARSER ERROR: expected IDENT after let/const, got %s\n", p.peekToken.Type)
+		// fmt.Printf("PARSER ERROR: expected IDENT after let/const, got %s\n", p.peekToken.Type)
 		return nil
 	}
 	p.nextToken()
@@ -608,7 +608,7 @@ func (p *Parser) parseLetStatement() Statement {
 	stmt.Name = &Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
 	if p.peekToken.Type != ASSIGN {
-		fmt.Printf("PARSER ERROR: expected = after identifier, got %s\n", p.peekToken.Type)
+		// fmt.Printf("PARSER ERROR: expected = after identifier, got %s\n", p.peekToken.Type)
 		return nil
 	}
 	p.nextToken()
@@ -885,7 +885,7 @@ func (e *Env) Set(name string, val interface{}, isConst bool) {
 func (e *Env) Update(name string, val interface{}) bool {
 	if _, ok := e.store[name]; ok {
 		if _, isConst := e.consts[name]; isConst {
-			fmt.Printf("ERROR: Cannot reassign constant %s\n", name)
+			// fmt.Printf("ERROR: Cannot reassign constant %s\n", name)
 			return false
 		}
 		e.store[name] = val
@@ -900,6 +900,48 @@ func (e *Env) Update(name string, val interface{}) bool {
 // --- Evaluator ---
 
 type ReturnValue struct{ Value interface{} }
+
+func formatLumaValue(v interface{}) string {
+	switch val := v.(type) {
+	case int:
+		return fmt.Sprintf("%d", val)
+	case string:
+		return val
+	case bool:
+		return fmt.Sprintf("%v", val)
+	case []interface{}:
+		var out strings.Builder
+		out.WriteString("[")
+		for i, el := range val {
+			out.WriteString(formatLumaValue(el))
+			if i < len(val)-1 { out.WriteString(", ") }
+		}
+		out.WriteString("]")
+		return out.String()
+	case map[string]interface{}:
+		var out strings.Builder
+		out.WriteString("{")
+		keys := make([]string, 0, len(val))
+		for k := range val { keys = append(keys, k) }
+		sort.Strings(keys)
+		for i, k := range keys {
+			out.WriteString(k + ": ")
+			v := val[k]
+			if s, ok := v.(string); ok {
+				out.WriteString("\"" + s + "\"")
+			} else {
+				out.WriteString(formatLumaValue(v))
+			}
+			if i < len(keys)-1 { out.WriteString(", ") }
+		}
+		out.WriteString("}")
+		return out.String()
+	case nil:
+		return "null"
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
 
 func Eval(node Node, env *Env) interface{} {
 	if node == nil { return nil }
@@ -1048,7 +1090,11 @@ func Eval(node Node, env *Env) interface{} {
 
 		if s, ok := fn.(string); ok {
 			if s == "BUILTIN_LOG" {
-				fmt.Println(args...)
+				formatted := []interface{}{}
+				for _, arg := range args {
+					formatted = append(formatted, formatLumaValue(arg))
+				}
+				fmt.Println(formatted...)
 				return nil
 			}
 			if s == "BUILTIN_LEN" {
