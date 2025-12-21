@@ -341,29 +341,67 @@ func evalExpr(expr Expression, env *Env) interface{} {
 }
 
 // ===== Minimal Parser =====
-// For simplicity, only supports: let, log, math numbers, arrays, objects
 func parse(tokens []Token) []Statement {
 	var stmts []Statement
 	i := 0
 	for i < len(tokens) {
 		tok := tokens[i]
+
+		// let / const
 		if tok.Type == LET || tok.Type == CONST {
 			name := tokens[i+1].Literal
 			i += 3
-			value := &NumberLiteral{Value: atoi(tokens[i].Literal)}
+			var value Expression
+			switch tokens[i].Type {
+			case NUMBER:
+				value = &NumberLiteral{Value: atoi(tokens[i].Literal)}
+			case STRING:
+				value = &StringLiteral{Value: tokens[i].Literal}
+			case BOOL:
+				value = &BooleanLiteral{Value: tokens[i].Literal == "true"}
+			default:
+				value = &Identifier{Value: tokens[i].Literal}
+			}
 			i++
-			if tokens[i].Type == SEMICOLON {
+			if i < len(tokens) && tokens[i].Type == SEMICOLON {
 				i++
 			}
 			stmts = append(stmts, &LetStatement{Name: name, Value: value})
+
 		} else if tok.Type == LOG {
-			i += 2
-			left := &Identifier{Value: tokens[i].Literal}
-			i += 2
-			if tokens[i].Type == SEMICOLON {
+			i++ // skip 'log'
+			if i >= len(tokens) || tokens[i].Type != LPAREN {
+				fmt.Println("Syntax error: expected '(' after log")
+				break
+			}
+			i++ // skip '('
+
+			// collect expression (simplified: single token expressions)
+			exprTok := tokens[i]
+			var expr Expression
+			switch exprTok.Type {
+			case NUMBER:
+				expr = &NumberLiteral{Value: atoi(exprTok.Literal)}
+			case STRING:
+				expr = &StringLiteral{Value: exprTok.Literal}
+			case BOOL:
+				expr = &BooleanLiteral{Value: exprTok.Literal == "true"}
+			case IDENT:
+				expr = &Identifier{Value: exprTok.Literal}
+			default:
+				fmt.Println("Unsupported log argument")
+				i++
+				continue
+			}
+			i++ // move past expression
+			if i < len(tokens) && tokens[i].Type == RPAREN {
 				i++
 			}
-			stmts = append(stmts, &LogStatement{Value: left})
+			if i < len(tokens) && tokens[i].Type == SEMICOLON {
+				i++
+			}
+			stmts = append(stmts, &LogStatement{Value: expr})
+
 		} else {
 			i++
 		}
