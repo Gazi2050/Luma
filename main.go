@@ -29,26 +29,10 @@ const (
 	LET    = "LET"
 	CONST  = "CONST"
 	LOG    = "LOG"
-	FN     = "FN"
-	LOOP   = "LOOP"
-	RETURN = "RETURN"
-
-	LT  = "<"
-	GT  = ">"
-	LTE = "<="
-	GTE = ">="
-	EQ  = "=="
-	NEQ = "!="
 
 	SEMICOLON = ";"
-	COMMA     = ","
 	LPAREN    = "("
 	RPAREN    = ")"
-	LBRACE    = "{"
-	RBRACE    = "}"
-	COLON     = ":"
-	LBRACKET  = "["
-	RBRACKET  = "]"
 )
 
 // ===== Token =====
@@ -91,7 +75,6 @@ func (l *Lexer) peekChar() byte {
 func (l *Lexer) NextToken() Token {
 	var tok Token
 	l.skipWhitespace()
-
 	switch l.ch {
 	case '+':
 		tok = Token{Type: PLUS, Literal: string(l.ch)}
@@ -102,51 +85,13 @@ func (l *Lexer) NextToken() Token {
 	case '/':
 		tok = Token{Type: SLASH, Literal: string(l.ch)}
 	case '=':
-		if l.peekChar() == '=' {
-			l.readChar()
-			tok = Token{Type: EQ, Literal: "=="}
-		} else {
-			tok = Token{Type: ASSIGN, Literal: string(l.ch)}
-		}
-	case '!':
-		if l.peekChar() == '=' {
-			l.readChar()
-			tok = Token{Type: NEQ, Literal: "!="}
-		} else {
-			tok = Token{Type: ILLEGAL, Literal: string(l.ch)}
-		}
-	case '<':
-		if l.peekChar() == '=' {
-			l.readChar()
-			tok = Token{Type: LTE, Literal: "<="}
-		} else {
-			tok = Token{Type: LT, Literal: "<"}
-		}
-	case '>':
-		if l.peekChar() == '=' {
-			l.readChar()
-			tok = Token{Type: GTE, Literal: ">="}
-		} else {
-			tok = Token{Type: GT, Literal: ">"}
-		}
+		tok = Token{Type: ASSIGN, Literal: string(l.ch)}
 	case '(':
 		tok = Token{Type: LPAREN, Literal: string(l.ch)}
 	case ')':
 		tok = Token{Type: RPAREN, Literal: string(l.ch)}
-	case '{':
-		tok = Token{Type: LBRACE, Literal: string(l.ch)}
-	case '}':
-		tok = Token{Type: RBRACE, Literal: string(l.ch)}
-	case '[':
-		tok = Token{Type: LBRACKET, Literal: string(l.ch)}
-	case ']':
-		tok = Token{Type: RBRACKET, Literal: string(l.ch)}
-	case ',':
-		tok = Token{Type: COMMA, Literal: string(l.ch)}
 	case ';':
 		tok = Token{Type: SEMICOLON, Literal: string(l.ch)}
-	case ':':
-		tok = Token{Type: COLON, Literal: string(l.ch)}
 	case '"':
 		tok.Type = STRING
 		tok.Literal = l.readString()
@@ -220,14 +165,6 @@ func LookupIdent(ident string) TokenType {
 		return CONST
 	case "log":
 		return LOG
-	case "fn":
-		return FN
-	case "loop":
-		return LOOP
-	case "true", "false":
-		return BOOL
-	case "return":
-		return RETURN
 	default:
 		return IDENT
 	}
@@ -260,20 +197,6 @@ type BooleanLiteral struct {
 
 type Identifier struct {
 	Value string
-}
-
-type BinaryExpression struct {
-	Left     Expression
-	Operator TokenType
-	Right    Expression
-}
-
-type ArrayLiteral struct {
-	Elements []Expression
-}
-
-type ObjectLiteral struct {
-	Pairs map[string]Expression
 }
 
 // ===== Environment =====
@@ -311,43 +234,16 @@ func evalExpr(expr Expression, env *Env) interface{} {
 		return e.Value
 	case *Identifier:
 		return env.store[e.Value]
-	case *BinaryExpression:
-		left := evalExpr(e.Left, env).(int)
-		right := evalExpr(e.Right, env).(int)
-		switch e.Operator {
-		case PLUS:
-			return left + right
-		case MINUS:
-			return left - right
-		case ASTERISK:
-			return left * right
-		case SLASH:
-			return left / right
-		}
-	case *ArrayLiteral:
-		var arr []interface{}
-		for _, el := range e.Elements {
-			arr = append(arr, evalExpr(el, env))
-		}
-		return arr
-	case *ObjectLiteral:
-		obj := make(map[string]interface{})
-		for k, v := range e.Pairs {
-			obj[k] = evalExpr(v, env)
-		}
-		return obj
 	}
 	return nil
 }
 
-// ===== Minimal Parser =====
+// ===== Parser =====
 func parse(tokens []Token) []Statement {
 	var stmts []Statement
 	i := 0
 	for i < len(tokens) {
 		tok := tokens[i]
-
-		// let / const
 		if tok.Type == LET || tok.Type == CONST {
 			name := tokens[i+1].Literal
 			i += 3
@@ -367,7 +263,6 @@ func parse(tokens []Token) []Statement {
 				i++
 			}
 			stmts = append(stmts, &LetStatement{Name: name, Value: value})
-
 		} else if tok.Type == LOG {
 			i++ // skip 'log'
 			if i >= len(tokens) || tokens[i].Type != LPAREN {
@@ -375,8 +270,6 @@ func parse(tokens []Token) []Statement {
 				break
 			}
 			i++ // skip '('
-
-			// collect expression (simplified: single token expressions)
 			exprTok := tokens[i]
 			var expr Expression
 			switch exprTok.Type {
@@ -393,7 +286,7 @@ func parse(tokens []Token) []Statement {
 				i++
 				continue
 			}
-			i++ // move past expression
+			i++ // skip expression
 			if i < len(tokens) && tokens[i].Type == RPAREN {
 				i++
 			}
@@ -401,7 +294,6 @@ func parse(tokens []Token) []Statement {
 				i++
 			}
 			stmts = append(stmts, &LogStatement{Value: expr})
-
 		} else {
 			i++
 		}
@@ -414,8 +306,39 @@ func atoi(s string) int {
 	return val
 }
 
-// ===== REPL =====
+// ===== Main =====
+func runLumaScript(filePath string) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+	env := NewEnv()
+	lines := strings.Split(string(content), "\n")
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		lexer := NewLexer(line)
+		var tokens []Token
+		for tok := lexer.NextToken(); tok.Type != EOF; tok = lexer.NextToken() {
+			tokens = append(tokens, tok)
+		}
+		stmts := parse(tokens)
+		for _, stmt := range stmts {
+			Eval(stmt, env)
+		}
+	}
+}
+
 func main() {
+	if len(os.Args) > 2 && os.Args[1] == "run" {
+		file := os.Args[2]
+		runLumaScript(file)
+		return
+	}
+
+	// REPL
 	env := NewEnv()
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Luma REPL v1 - Type your code")
