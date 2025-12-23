@@ -82,6 +82,7 @@ loop (let i = 0; i < 3; i = i + 1) {
 ```
 
 **Expected Output:**
+
 ```text
 Hello Luma
 10
@@ -98,12 +99,14 @@ Hi, Luma
 ### Syntax Highlights
 
 #### Variables
+
 ```lu
 let age = 25;
 const title = "Luma"; // Cannot be reassigned
 ```
 
 #### Arrays & Objects
+
 ```lu
 let list = [1, "two", true];
 let obj = { key: "value", nested: { a: 1 } };
@@ -111,6 +114,7 @@ log(obj.nested.a);
 ```
 
 #### Functions
+
 ```lu
 fn add(a, b) {
     return a + b;
@@ -118,6 +122,7 @@ fn add(a, b) {
 ```
 
 #### Loops
+
 ```lu
 loop (let i = 0; i < 5; i = i + 1) {
     log(i);
@@ -131,3 +136,4 @@ loop (let i = 0; i < 5; i = i + 1) {
 - Semicolons `;` are optional after blocks and at the end of many statements.
 - The interpreter uses a Pratt Parser for reliable expression evaluation.
 - All code is executed via a tree-walking evaluator with scoped environments.
+- hello
