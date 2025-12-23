@@ -136,4 +136,3 @@ loop (let i = 0; i < 5; i = i + 1) {
 - Semicolons `;` are optional after blocks and at the end of many statements.
 - The interpreter uses a Pratt Parser for reliable expression evaluation.
 - All code is executed via a tree-walking evaluator with scoped environments.
-- hello
