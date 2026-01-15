@@ -2,92 +2,55 @@
 
 This document provides a comprehensive breakdown of the engine behind the Luma programming language. Built entirely in Go, Luma follows a modular architecture where each component has a distinct responsibility in the lifecycle of a script—from raw text to a running program.
 
----
 
-## 🏗️ Core Architecture Overview
 
-Luma operates as a **Tree-Walking Interpreter**. The execution flow follows these four stages:
+## 📂 Project Structure & Package Breakdown
 
-1.  **Lexing**: Raw text is converted into tokens.
-2.  **Parsing**: Tokens are organized into an Abstract Syntax Tree (AST).
-3.  **Evaluating**: The AST is traversed to perform logic and compute values.
-4.  **Environment Management**: Variables and scopes are tracked during evaluation.
+Luma's source code is organized into modular Go packages, each responsible for a specific stage of the interpreter lifecycle.
 
----
-
-## 📦 Component Breakdown
-
-### 1. The Entry Point
+### 🏠 Root Directory
 **File:** [main.go](file:///home/gazi/Projects/my-projects/Luma/main.go)
 
-The entry point orchestrates the entire process. It handles command-line arguments (deciding whether to start the REPL or run a file) and initializes the standard environment.
+The starting point of the application. It handles CLI arguments and initializes the execution environment.
+- **CLI Handling**: Decides between starting the interactive REPL or running a `.lu` file.
+- **Orchestration**: Connects the Lexer, Parser, and Evaluator to process code from start to finish.
 
-- **REPL Mode**: Repeatedly takes user input and passes it through the lexer → parser → evaluator pipeline.
-- **Run Mode**: Reads an entire file from disk and evaluates it in a single pass.
+### 📦 `token/`
+**File:** [token/token.go](file:///home/gazi/Projects/my-projects/Luma/token/token.go)
 
----
+Defines the fundamental "words" of the Luma language.
+- **TokenType**: A custom string type used to categorize symbols (e.g., `LET`, `FN`, `PLUS`).
+- **Token Struct**: Stores the type and the actual text (literal) from the source code.
+- **Lookup Table**: Maps keywords like `if` and `loop` to their respective token types.
 
-### 2. Lexical Analysis (The Lexer)
-**Package:** `lexer` | **File:** [lexer/lexer.go](file:///home/gazi/Projects/my-projects/Luma/lexer/lexer.go)
+### 📦 `lexer/`
+**File:** [lexer/lexer.go](file:///home/gazi/Projects/my-projects/Luma/lexer/lexer.go)
 
-The Lexer is a state machine that scans source code character by character.
+The Lexer (Scanner) converts the raw source string into a stream of tokens.
+- **Character Reading**: Iterates through the input character by character using a pointer system.
+- **Pattern Matching**: Recognizes identifiers, numbers, and strings while ignoring whitespace and comments.
+- **Peek Logic**: Essential for multi-character operators like `==` or `<=`.
 
-- **Tokens**: Every meaningful unit of code (like `let`, `+`, or `123`) is mapped to a constant defined in the [token/token.go](file:///home/gazi/Projects/my-projects/Luma/token/token.go) file.
-- **Scanning Logic**: It handles complex cases like multi-character operators (`==`, `!=`) by peeking at the next character before deciding which token to emit.
-- **Keyword Recognition**: It uses a lookup table to distinguish between user-defined variables (`x`) and language keywords (`if`, `loop`).
+### 📦 `ast/`
+**File:** [ast/ast.go](file:///home/gazi/Projects/my-projects/Luma/ast/ast.go)
 
----
+Contains the definition of the Abstract Syntax Tree (AST), the internal logical representation of the code.
+- **Node Interfaces**: Every construct must implement the `Node` interface.
+- **Hierarchy**: Distinguishes between **Statements** (actions like variable declaration) and **Expressions** (computations that result in values).
+- **String Printing**: Every node can reconstruct its source-like representation for debugging.
 
-### 3. The Abstract Syntax Tree (AST)
-**Package:** `ast` | **File:** [ast/ast.go](file:///home/gazi/Projects/my-projects/Luma/ast/ast.go)
+### 📦 `parser/`
+**File:** [parser/parser.go](file:///home/gazi/Projects/my-projects/Luma/parser/parser.go)
 
-The AST is the internal data structure that represents your code.
+Transforms the flat token stream into a nested AST using a **Pratt Parser**.
+- **Precedence Management**: Uses a weight-based system to handle the "order of operations" (e.g., multiplication before addition).
+- **Recursive Parsing**: Decodes complex structures like nested function calls and object literals.
+- **Syntax Validation**: Ensures the code follows Luma's grammatical rules and reports errors.
 
-- **Nodes**: Every construct in Luma (a number literal, a function call, a mathematical expression) implements the `ast.Node` interface.
-- **Statements vs Expressions**: Luma distinguishes between code that produces a value (Expressions) and code that performs an action (Statements). This distinction is critical for the parser and evaluator.
+### 📦 `evaluator/`
+**Files:** [evaluator.go](file:///home/gazi/Projects/my-projects/Luma/evaluator/evaluator.go) | [environment.go](file:///home/gazi/Projects/my-projects/Luma/evaluator/environment.go)
 
----
-
-### 4. Parsing (The Pratt Parser)
-**Package:** `parser` | **File:** [parser/parser.go](file:///home/gazi/Projects/my-projects/Luma/parser/parser.go)
-
-Luma uses a **Pratt Parser** (Top-Down Operator Precedence). Unlike a simple recursive descent parser, a Pratt parser handles operator precedence (e.g., ensuring `*` happens before `+`) with high efficiency and readability.
-
-- **Precedences**: Defined in a map, assigning values to tokens (e.g., `PRODUCT` is higher than `SUM`).
-- **Infix & Prefix**: The parser registers functions for "prefix" operators (like `-` or `!`) and "infix" operators (like `+` or `*`).
-- **Error Handling**: Collects informative error messages if the syntax is invalid.
-
----
-
-### 5. Scoping & Environments
-**Package:** `evaluator` | **File:** [evaluator/environment.go](file:///home/gazi/Projects/my-projects/Luma/evaluator/environment.go)
-
-Luma features **Lexical Scoping**, managed by the `Env` struct.
-
-- **Nested Scopes**: Every time a function or block is executed, a new "enclosed" environment is created. This environment keeps a pointer to its "outer" parent.
-- **Lookup Process**: When you use a variable, Luma checks the local scope first, then moves up the chain of parent environments until it finds the variable or hits the global scope.
-- **Constant Protection**: The environment tracks whether a variable was defined with `const`, preventing re-assignment at runtime.
-
----
-
-### 6. The Evaluator (Tree-Walking)
-**Package:** `evaluator` | **File:** [evaluator/evaluator.go](file:///home/gazi/Projects/my-projects/Luma/evaluator/evaluator.go)
-
-The Evaluator is where the code actually "runs". It uses recursion to visit every node in the AST and perform the corresponding Go operations.
-
-- **Go Mapping**: Luma values are mapped directly to Go types (e.g., Luma `number` → Go `int`).
-- **First-Class Functions**: Functions are stored as AST nodes within the environment, allowing them to be passed as arguments or returned from other functions.
-- **Formatters**: Includes a custom `FormatLumaValue` function to pretty-print objects and arrays in a human-readable way.
-
----
-
-## 🛠️ Implementation Details
-
-### Why Go?
-We chose Go for Luma because of its:
-- **Fast Execution**: Compiles to native code, making the recursive evaluator very responsive.
-- **Robust Standard Library**: Handling strings, maps, and file I/O is seamless.
-- **Static Typing**: Ensures the interpreter's internal logic is type-safe.
-
-### Handling `loop`
-The `loop` statement in Luma is uniquely implemented to behave like a standard C `for` loop but within a single keyword. During evaluation, it creates a dedicated scope to handle the initialization variable, ensuring it doesn't "leak" into the outer scope.
+The "Engine" that carries out the logic of the program.
+- **`evaluator.go`**: Traverses the AST and executes Go logic for each node. It handles arithmetic, function calls, and data structure manipulation.
+- **`environment.go`**: Manages the life of variables. It supports **Lexical Scoping** (nested scopes) and strictly enforces `const` reassignment rules.
+- **Pretty Printing**: Includes logic to format Luma objects and arrays into human-readable strings for the `log()` function.

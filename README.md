@@ -2,13 +2,14 @@
 
 **Luma** is a high-performance, lightweight, interpreted programming language built from scratch in **Go**. It aims to provide a clean, modern syntax while maintaining the simplicity of a tree-walking interpreter.
 
----
+
 
 ## 🚀 Installation
 
 Ensure you have [Go](https://go.dev/) (version 1.18+) installed on your system.
 
 ### 1. Clone & Setup
+
 ```bash
 # Clone the repository
 git clone <your-repo-url>
@@ -19,6 +20,7 @@ go mod tidy
 ```
 
 ### 2. Build the Binary
+
 ```bash
 # Build the luma executable
 go build -o luma main.go
@@ -26,90 +28,166 @@ go build -o luma main.go
 
 The `luma` binary is now ready for use in your current directory.
 
----
+
 
 ## 🕹️ Usage
 
 Luma provides two primary environments for development.
 
 ### 1. Interactive REPL
-Perfect for testing expressions and small logic snippets.
 
-**Command:**
+Execute code line by line for quick testing.
+
 ```bash
 ./luma
 ```
 
-**Inside the REPL:**
-- **Execute**: Type any code and press `Enter`.
-- **Persistent State**: Variables declared in the REPL remain in memory until you exit.
-- **Exit**: Use `Ctrl+C` or `Ctrl+D`.
+**Example:**
 
-### 2. Script Execution
-For running modular `.lu` source files.
-
-**Command:**
-```bash
-./luma run <path_to_file>.lu
+```text
+>> let name = "Luma";
+>> log("Hello " + name)
+Hello Luma
 ```
 
-**Example:**
+_(Use `Ctrl+C` to exit)_
+
+### 2. Script Execution
+
+Run entire `.lu` files containing your Luma code.
+
 ```bash
 ./luma run index.lu
 ```
 
----
+
 
 ## ✨ Features
 
-- **Robust Variable System**: Supports both mutable `let` and immutable `const` declarations.
-- **Rich Scoping**: Lexical scoping ensures variables are only accessible where they should be.
-- **First-Class Functions**: Define, pass, and return functions just like any other value.
-- **Modern Data Structures**:
-    - **Objects**: Key-value pairs with dot notation (`user.name`).
-    - **Arrays**: Dynamic lists with index access (`nums[0]`).
-- **Dynamic Typing**: No need for explicit type declarations; Luma handles it at runtime.
-- **Standard Library**:
-    - `log(...)`: Output any value to the console with clean formatting.
-    - `len(...)`: Get the length of strings or arrays instantly.
+### Variables
+Luma provides two ways to store data depending on whether you need to change it later.
 
----
+- **How it works:** 
+    - `let` declarations create mutable variables. You can reassign them using the `=` operator (e.g., `x = 20;`).
+    - `const` declarations are read-only. Once assigned, their value is locked.
+- **Usage Tips:** 
+    - ✅ Use `const` for values that never change (like configuration or math constants).
+    - ✅ Use `let` for counters or values that must be updated.
+    - ❌ Don't try to reassign a `const`. The interpreter will throw an error.
 
-## 📜 Development Guidelines
+```lu
+let score = 100;    // Can be updated
+const PI = 3.14;    // Fixed value
+```
 
-### ✅ What to Use (Dos)
-- **Use `const` by default**: Favor `const` for values that shouldn't change to prevent accidental reassignments.
-- **Use Semicolons**: While often optional, ending statements with `;` is best practice for clarity.
-- **Leverage Objects**: Group related data into objects to keep your code organized.
-- **Use `log()` for Debugging**: It pretty-prints complex structures like nested objects and arrays automatically.
+### Arrays
+Represent ordered lists of values.
 
-### ❌ What to Avoid (Don'ts)
-- **Don't Overuse Global Scope**: Keep variables inside functions to avoid naming collisions.
-- **Don't Forget `run` Keyword**: When executing files, always use `./luma run script.lu`. Using `./luma script.lu` will just open the REPL.
-- **Avoid Circular References**: While Luma is powerful, deeply circular object references might lead to infinite formatting loops in `log()`.
+- **How it works:** Arrays in Luma can store a mix of any type (numbers, strings, booleans, even other arrays or objects). Accessing elements starts at index `0`.
+- **Usage Tips:** 
+    - ✅ Use `len()` to get the size of an array before looping.
+    - ✅ Use arrays for lists of similar items.
+    - ❌ Don't access an index larger than the array size; it will return `null`.
 
----
+```lu
+let list = [1, "Luma", true];
+log(list[0]); // Output: 1
+```
+
+### Objects
+Store data in key-value pairs, similar to a dictionary or map.
+
+- **How it works:** You can access property values using the **Dot Notation** (e.g., `user.name`).
+- **Usage Tips:** 
+    - ✅ Use objects to group related data (like a user's profile).
+    - ✅ Keys are strings by default.
+    - ❌ Don't use reserved keywords as object keys.
+
+```lu
+let user = { name: "Gazi", id: 1 };
+log(user.name); // Output: Gazi
+```
+
+### Condition
+Control the flow of your program based on logic.
+
+- **How it works:** The `if` statement evaluates a condition. If it is `true`, the first block runs. If `false`, the optional `else` block runs.
+- **Usage Tips:** 
+    - ✅ Always wrap your condition in parentheses `()`.
+    - ✅ Use comparison operators like `==`, `!=`, `>`, `<`, `>=`, `<=`.
+    - ❌ Don't forget the `{}` curly braces even for single-line logic.
+
+```lu
+if (score > 50) { 
+    log("Winner!"); 
+} else { 
+    log("Try Again"); 
+}
+```
+
+### Loop
+Luma features a powerful, single-keyword loop that handles all iteration needs.
+
+- **How it works:** The `loop` takes three parts separated by semicolons: `initialization; condition; increment`.
+- **Usage Tips:** 
+    - ✅ Be careful with infinite loops; ensure the condition eventually becomes `false`.
+    - ✅ Use `let` for the iterator variable inside the loop initialization.
+    - ❌ Don't omit the semicolons inside the `loop` parentheses.
+
+```lu
+loop (let i = 0; i < 5; i = i + 1) {
+    log("Iteration:", i);
+}
+```
+
+### Function
+Functions are "First-Class" in Luma, meaning they can be assigned to variables and passed around.
+
+- **How it works:** Use the `fn` keyword followed by the name, parameters, and a block of code. Use `return` to send a value back.
+- **Usage Tips:** 
+    - ✅ Give your functions descriptive names like `calculateTotal`.
+    - ✅ Use functions to avoid repeating code.
+    - ❌ Functions without a `return` statement will return the value of the last expression executed.
+
+```lu
+fn greet(name) {
+    return "Hello, " + name;
+}
+log(greet("User"));
+```
+
+### Math
+Luma handles complex mathematical expressions with ease.
+
+- **How it works:** It follows standard math precedence (Multiplication/Division before Addition/Subtraction). Parentheses `()` can be used to override this.
+- **Usage Tips:** 
+    - ✅ Use `()` to make your math logic easier to read.
+    - ✅ Both integers and decimals are supported.
+    - ❌ Don't mix incompatible types (like `10 + "string"`) unless you intend to concatenate.
+
+```lu
+let result = (10 + 2) * 5 / 2;
+log(result); // Output: 30
+```
+
+### Built-in Functions
+Standard tools that come pre-installed in Luma.
+
+- **How it works:** 
+    - `log(...)`: Prints one or more values to the console. It works for arrays and nested objects too!
+    - `len(val)`: Returns the number of characters in a string or items in an array.
+- **Usage Tips:** 
+    - ✅ Use `log()` with multiple arguments to debug values easily.
+    - ✅ Use `len()` to check if a string is empty (`len(str) == 0`).
+
+```lu
+log("Items:", [1, 2, 3]);
+let size = len("Luma"); // Returns 4
+```
+
 
 ## 📖 Deep Dive
+
 To understand how Luma translates text into logic, check out the implementation details:
+
 - [**The Luma Engine (LANGUAGE_DETAILS.md)**](file:///home/gazi/Projects/my-projects/Luma/LANGUAGE_DETAILS.md)
-
----
-
-## 📝 Example `index.lu`
-```lu
-let greeting = "Hello, Luma!";
-const PI = 3.14;
-
-fn calculateCircle(r) {
-    if (r <= 0) { return 0; }
-    return PI * r * r;
-}
-
-let data = {
-    radius: 10,
-    result: calculateCircle(10)
-};
-
-log(greeting, "Area:", data.result);
-```
