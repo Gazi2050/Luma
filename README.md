@@ -4,27 +4,23 @@
 
 ## 🚀 Installation
 
-Ensure you have [Go](https://go.dev/) (version 1.18+) installed on your system.
+Ensure you have [Go](https://go.dev/) (version 1.18+) installed.
 
-### 1. Clone & Setup
-
+### 1. Clone the Repository
 ```bash
-# Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/Gazi2050/Luma.git
 cd Luma
-
-# Initialize and tidy dependencies
-go mod tidy
 ```
 
-### 2. Build the Binary
+### 2. Global Installation
 
-```bash
-# Build the luma executable
-go build -o luma main.go
-```
+| Platform | One-Line Install Command | 🗑️ Uninstall |
+| :--- | :--- | :--- |
+| **🐧 Linux** | `go build -o luma main.go && sudo mv luma /usr/local/bin/luma` | `sudo rm /usr/local/bin/luma` |
+| **🍎 macOS** | `go build -o luma main.go && sudo mv luma /usr/local/bin/luma` | `sudo rm /usr/local/bin/luma` |
+| **🪟 Windows** | `go build -o luma.exe main.go && move luma.exe C:\Windows\System32\` (CMD Admin) | `del C:\Windows\System32\luma.exe` |
 
-The `luma` binary is now ready for use in your current directory.
+The `luma` command is now ready!
 
 ## 🕹️ Usage
 
