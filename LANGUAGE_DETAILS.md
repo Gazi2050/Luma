@@ -25,8 +25,8 @@ Luma/
     └── token.go
 ```
 
-
 ## 📦 Package Breakdown
+
 Luma's source code is organized into modular Go packages, each responsible for a specific stage of the interpreter lifecycle.
 
 ### 🏠 Root Directory
@@ -80,7 +80,7 @@ Transforms the flat token stream into a nested AST using a **Pratt Parser**.
 
 ### 📦 `evaluator`
 
-**Files:** [evaluator.go](./evaluator/environment.go)
+**Files:** [evaluator.go](./evaluator/evaluator.go) | [environment.go](./evaluator/environment.go)
 
 The "Engine" that carries out the logic of the program.
 

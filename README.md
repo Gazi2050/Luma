@@ -1,8 +1,6 @@
 # Luma – A Minimal Programming Language
 
-**Luma** is a high-performance, lightweight, interpreted programming language built from scratch in **Go**. It aims to provide a clean, modern syntax while maintaining the simplicity of a tree-walking interpreter.
-
-
+**Luma** is a minimal interpreted programming language built from scratch in **Go**. It is purely designed to provide a clean and simple syntax without extra complexity.
 
 ## 🚀 Installation
 
@@ -27,8 +25,6 @@ go build -o luma main.go
 ```
 
 The `luma` binary is now ready for use in your current directory.
-
-
 
 ## 🕹️ Usage
 
@@ -59,8 +55,6 @@ Run entire `.lu` files containing your Luma code.
 ```bash
 ./luma run index.lu
 ```
-
-
 
 ## ✨ Features
 
