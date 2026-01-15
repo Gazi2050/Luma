@@ -1,0 +1,14 @@
+# Binaries
+luma
+luma.exe
+
+# Build artifacts
+dist/
+bin/
+
+# Dependency directories
+vendor/
+
+# OS metadata
+.DS_Store
+Thumbs.db
