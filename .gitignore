@@ -6,9 +6,6 @@ luma.exe
 dist/
 bin/
 
-# Dependency directories
-vendor/
-
 # OS metadata
 .DS_Store
 Thumbs.db

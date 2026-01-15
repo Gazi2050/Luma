@@ -33,9 +33,13 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print(">> ")
-		if !scanner.Scan() { break }
+		if !scanner.Scan() {
+			break
+		}
 		line := scanner.Text()
-		if line == "" { continue }
+		if line == "" {
+			continue
+		}
 		l := lexer.NewLexer(line)
 		p := parser.NewParser(l)
 		program := p.ParseProgram()

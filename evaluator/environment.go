@@ -1,9 +1,9 @@
 package evaluator
 
 type Env struct {
-	store map[string]interface{}
+	store  map[string]interface{}
 	consts map[string]bool
-	outer *Env
+	outer  *Env
 }
 
 func NewEnv() *Env {
@@ -26,7 +26,9 @@ func (e *Env) Get(name string) (interface{}, bool) {
 
 func (e *Env) Set(name string, val interface{}, isConst bool) {
 	e.store[name] = val
-	if isConst { e.consts[name] = true }
+	if isConst {
+		e.consts[name] = true
+	}
 }
 
 func (e *Env) Update(name string, val interface{}) bool {
