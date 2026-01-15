@@ -1,138 +1,115 @@
 # Luma – A Minimal Programming Language
 
-**Luma** is a lightweight, interpreted programming language built in **Go**, designed for a clean and simple developer experience while supporting core language features.
+**Luma** is a high-performance, lightweight, interpreted programming language built from scratch in **Go**. It aims to provide a clean, modern syntax while maintaining the simplicity of a tree-walking interpreter.
 
 ---
 
-## Features
+## 🚀 Installation
 
-- **Variables**: `let` and `const` (with constant protection).
-- **Types**: `number`, `string`, `boolean`, `array`, `object`.
-- **Built-in functions**: `log()`, `len()`.
-- **Advanced Logic**: Full support for nested functions, lexical scoping, and recursion.
-- **Control Flow**: `if/else` and `loop (init; condition; post)` syntax.
-- **Improved Logging**: Pretty-printed output for arrays and objects.
+Ensure you have [Go](https://go.dev/) (version 1.18+) installed on your system.
 
----
-
-## Installation
-
-Clone the repository and build Luma:
-
+### 1. Clone & Setup
 ```bash
+# Clone the repository
 git clone <your-repo-url>
 cd Luma
+
+# Initialize and tidy dependencies
+go mod tidy
+```
+
+### 2. Build the Binary
+```bash
+# Build the luma executable
 go build -o luma main.go
 ```
 
-This produces the `luma` executable.
+The `luma` binary is now ready for use in your current directory.
 
 ---
 
-## Usage
+## 🕹️ Usage
 
-### 1. REPL (Interactive Mode)
+Luma provides two primary environments for development.
 
-Start Luma REPL:
+### 1. Interactive REPL
+Perfect for testing expressions and small logic snippets.
 
+**Command:**
 ```bash
 ./luma
 ```
 
-### 2. Running `.lu` Scripts
+**Inside the REPL:**
+- **Execute**: Type any code and press `Enter`.
+- **Persistent State**: Variables declared in the REPL remain in memory until you exit.
+- **Exit**: Use `Ctrl+C` or `Ctrl+D`.
 
-Run the provided example script:
+### 2. Script Execution
+For running modular `.lu` source files.
 
+**Command:**
+```bash
+./luma run <path_to_file>.lu
+```
+
+**Example:**
 ```bash
 ./luma run index.lu
 ```
 
-### Sample `index.lu`
+---
 
-```lu
-// 1. Variables & Types
-let name = "Luma";
-const version = 1;
+## ✨ Features
 
-// 2. Objects & Arrays
-let user = { name: name, age: version };
-let nums = [10, 20, 30];
-
-log("Hello " + user.name);
-log(nums[0]);
-log(len(nums));
-
-// 3. Math & Comparisons
-let result = (10 + 2) * 3;
-log(result > 30); // true
-
-// 4. Functions
-fn greet(n) {
-    if (len(n) > 0) {
-        return "Hi, " + n;
-    }
-    return "Hi, guest";
-}
-log(greet(user.name));
-
-// 5. Loops
-loop (let i = 0; i < 3; i = i + 1) {
-    log(i);
-}
-```
-
-**Expected Output:**
-
-```text
-Hello Luma
-10
-3
-true
-Hi, Luma
-0
-1
-2
-```
+- **Robust Variable System**: Supports both mutable `let` and immutable `const` declarations.
+- **Rich Scoping**: Lexical scoping ensures variables are only accessible where they should be.
+- **First-Class Functions**: Define, pass, and return functions just like any other value.
+- **Modern Data Structures**:
+    - **Objects**: Key-value pairs with dot notation (`user.name`).
+    - **Arrays**: Dynamic lists with index access (`nums[0]`).
+- **Dynamic Typing**: No need for explicit type declarations; Luma handles it at runtime.
+- **Standard Library**:
+    - `log(...)`: Output any value to the console with clean formatting.
+    - `len(...)`: Get the length of strings or arrays instantly.
 
 ---
 
-### Syntax Highlights
+## 📜 Development Guidelines
 
-#### Variables
+### ✅ What to Use (Dos)
+- **Use `const` by default**: Favor `const` for values that shouldn't change to prevent accidental reassignments.
+- **Use Semicolons**: While often optional, ending statements with `;` is best practice for clarity.
+- **Leverage Objects**: Group related data into objects to keep your code organized.
+- **Use `log()` for Debugging**: It pretty-prints complex structures like nested objects and arrays automatically.
 
-```lu
-let age = 25;
-const title = "Luma"; // Cannot be reassigned
-```
-
-#### Arrays & Objects
-
-```lu
-let list = [1, "two", true];
-let obj = { key: "value", nested: { a: 1 } };
-log(obj.nested.a);
-```
-
-#### Functions
-
-```lu
-fn add(a, b) {
-    return a + b;
-}
-```
-
-#### Loops
-
-```lu
-loop (let i = 0; i < 5; i = i + 1) {
-    log(i);
-}
-```
+### ❌ What to Avoid (Don'ts)
+- **Don't Overuse Global Scope**: Keep variables inside functions to avoid naming collisions.
+- **Don't Forget `run` Keyword**: When executing files, always use `./luma run script.lu`. Using `./luma script.lu` will just open the REPL.
+- **Avoid Circular References**: While Luma is powerful, deeply circular object references might lead to infinite formatting loops in `log()`.
 
 ---
 
-### Notes
+## 📖 Deep Dive
+To understand how Luma translates text into logic, check out the implementation details:
+- [**The Luma Engine (LANGUAGE_DETAILS.md)**](file:///home/gazi/Projects/my-projects/Luma/LANGUAGE_DETAILS.md)
 
-- Semicolons `;` are optional after blocks and at the end of many statements.
-- The interpreter uses a Pratt Parser for reliable expression evaluation.
-- All code is executed via a tree-walking evaluator with scoped environments.
+---
+
+## 📝 Example `index.lu`
+```lu
+let greeting = "Hello, Luma!";
+const PI = 3.14;
+
+fn calculateCircle(r) {
+    if (r <= 0) { return 0; }
+    return PI * r * r;
+}
+
+let data = {
+    radius: 10,
+    result: calculateCircle(10)
+};
+
+log(greeting, "Area:", data.result);
+```
