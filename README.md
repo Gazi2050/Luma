@@ -188,4 +188,4 @@ let size = len("Luma"); // Returns 4
 
 To understand how Luma translates text into logic, check out the implementation details:
 
-- [**The Luma Engine (LANGUAGE_DETAILS.md)**](LANGUAGE_DETAILS.md)
+- [**The Luma Engine**](LANGUAGE_DETAILS.md)
